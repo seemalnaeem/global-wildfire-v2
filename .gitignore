@@ -1,0 +1,34 @@
+# Env and secrets
+.env
+*.local
+CDSE.txt
+
+# Node
+node_modules/
+dist/
+.vite/
+npm-debug.log*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Data: keep sources tracked externally, ignore derived COGs and raw rasters
+data/*.cog.tif
+data/*_cog.tif
+data/*.tif
+data/*.tif.aux.xml
+data/*.vrt
+data/*.json
+data/tmp/
+data/objstore/
+*.mbtiles
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

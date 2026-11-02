@@ -1,0 +1,12 @@
+[02/11/2026 10:04:37.19] Startup triggered 
+[02/11/2026 10:04:37.40] Docker is ready, starting the stack... 
+ Container gwf-db Running 
+ Container gwf-titiler Running 
+ Container gwf-backend Running 
+ Container gwf-geoprocessing Running 
+ Container gwf-frontend Running 
+ Container gwf-db Waiting 
+ Container gwf-db Waiting 
+ Container gwf-db Healthy 
+ Container gwf-db Healthy 
+[02/11/2026 10:04:46.23] Done. 

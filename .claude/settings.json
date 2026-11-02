@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker compose:*)",
+      "Bash(docker:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)",
+      "Bash(python:*)",
+      "Bash(pip:*)",
+      "Bash(uvicorn:*)",
+      "Bash(psql:*)",
+      "Bash(gdalinfo:*)",
+      "Bash(gdal_translate:*)",
+      "Bash(gdaladdo:*)",
+      "Bash(gdalwarp:*)",
+      "Bash(ogr2ogr:*)",
+      "Bash(ogrinfo:*)",
+      "Read(./**)",
+      "Write(./**)",
+      "Edit(./**)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Bash(rm -rf:*)",
+      "Bash(docker compose down -v:*)"
+    ]
+  },
+  "env": {
+    "GWF_DB_PORT": "5440",
+    "GWF_BACKEND_PORT": "3040",
+    "GWF_FRONTEND_PORT": "5180"
+  }
+}

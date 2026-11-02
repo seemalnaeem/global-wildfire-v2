@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+/* Thin, dark scrollbars for the HUD panels (Firefox + WebKit). */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #475569 transparent;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: #475569;
+  border-radius: 9999px;
+}
+
+@keyframes fade-in-down {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-down {
+  animation: fade-in-down 0.15s ease-out;
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.animate-slide-in-right {
+  animation: slide-in-right 0.18s ease-out;
+}
+
+/* MapLibre map-click popups: restyle to match the app's dark theme. The default
+   close button has no explicit color, so it was inheriting the page's light text
+   color and disappearing against the popup's white background. The `body` prefix
+   on each selector raises specificity above maplibre-gl.css without !important. */
+body .maplibregl-popup-content {
+  background: #0f172a;
+  color: #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(51, 65, 85, 0.7);
+}
+body .maplibregl-popup-close-button {
+  color: #94a3b8;
+  font-size: 18px;
+  line-height: 1;
+  padding: 4px 9px;
+  border-radius: 0 10px 0 0;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+body .maplibregl-popup-close-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+body .maplibregl-popup-anchor-top .maplibregl-popup-tip,
+body .maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
+body .maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
+  border-bottom-color: #0f172a;
+}
+body .maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+body .maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+body .maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
+  border-top-color: #0f172a;
+}
+body .maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: #0f172a;
+}
+body .maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: #0f172a;
+}

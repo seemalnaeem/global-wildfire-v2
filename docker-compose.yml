@@ -1,0 +1,130 @@
+# global-wildfire-portal stack.
+# Compose project name groups all services under one container namespace.
+name: global-wildfire-portal
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: gwf-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-global-wildfire}
+      POSTGRES_USER: ${POSTGRES_USER:-gwf}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gwf}
+    ports:
+      - "5440:5432"
+    volumes:
+      - gwf_pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gwf} -d ${POSTGRES_DB:-global-wildfire}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [gwf]
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: gwf-backend
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-gwf}:${POSTGRES_PASSWORD:-gwf}@db:5432/${POSTGRES_DB:-global-wildfire}
+      PORT: 3040
+      GEOPROCESSING_URL: http://geoprocessing:3041
+      TITILER_URL: http://titiler:3042
+    ports:
+      - "3040:3040"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [gwf]
+
+  geoprocessing:
+    build:
+      context: .
+      dockerfile: geoprocessing/Dockerfile
+    container_name: gwf-geoprocessing
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-gwf}:${POSTGRES_PASSWORD:-gwf}@db:5432/${POSTGRES_DB:-global-wildfire}
+      DATA_DIR: /data
+      PORT: 3041
+      STORAGE_BACKEND: ${STORAGE_BACKEND:-local}
+      SCHEDULER_ENABLED: ${SCHEDULER_ENABLED:-false}
+      FIRMS_REFRESH_HOURS: ${FIRMS_REFRESH_HOURS:-6}
+      FIRMS_RETENTION_DAYS: ${FIRMS_RETENTION_DAYS:-5}
+      FIRMS_MAP_KEY: ${FIRMS_MAP_KEY:-}
+      FIRMS_SOURCE: ${FIRMS_SOURCE:-VIIRS_SNPP_NRT}
+      FIRMS_AREA: ${FIRMS_AREA:-world}
+      FIRMS_DAYS: ${FIRMS_DAYS:-1}
+      FIRMS_MIN_FRP: ${FIRMS_MIN_FRP:-2}
+      FIRE_CLUSTER_DISTANCE_M: ${FIRE_CLUSTER_DISTANCE_M:-1000}
+      FIRE_CLUSTER_MIN_POINTS: ${FIRE_CLUSTER_MIN_POINTS:-5}
+      FIRE_MIN_CLUSTER_FRP: ${FIRE_MIN_CLUSTER_FRP:-20}
+      FIRE_MERGE_DISTANCE_M: ${FIRE_MERGE_DISTANCE_M:-2500}
+      FIRE_BOUNDARY_BUFFER_M: ${FIRE_BOUNDARY_BUFFER_M:-400}
+      WILDFIRE_LANDCOVER_CODES: ${WILDFIRE_LANDCOVER_CODES:-10,20,30}
+      OPEN_METEO_URL: ${OPEN_METEO_URL:-https://api.open-meteo.com/v1/forecast}
+      CDSE_CLIENT_ID: ${CDSE_CLIENT_ID:-}
+      CDSE_CLIENT_SECRET: ${CDSE_CLIENT_SECRET:-}
+    ports:
+      - "3041:3041"
+    volumes:
+      - ./data:/data
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [gwf]
+
+  titiler:
+    image: ghcr.io/developmentseed/titiler:latest
+    container_name: gwf-titiler
+    environment:
+      PORT: 3042
+      TITILER_API_ROOT_PATH: ""
+      # COGs are read from the mounted data volume; some layers (SRTM) are remote.
+      GDAL_DISABLE_READDIR_ON_OPEN: EMPTY_DIR
+      CPL_VSIL_CURL_ALLOWED_EXTENSIONS: ".tif,.vrt"
+      # Cache remote reads so adjacent/repeat tiles do not refetch over the network.
+      VSI_CACHE: "TRUE"
+      VSI_CACHE_SIZE: "536870912"
+      CPL_VSIL_CURL_CACHE_SIZE: "536870912"
+      GDAL_CACHEMAX: "512"
+      GDAL_HTTP_MERGE_CONSECUTIVE_RANGES: "YES"
+      GDAL_HTTP_MULTIPLEX: "YES"
+      GDAL_HTTP_VERSION: "2"
+    command: ["uvicorn", "titiler.application.main:app", "--host", "0.0.0.0", "--port", "3042"]
+    ports:
+      - "3042:3042"
+    volumes:
+      - ./data:/data:ro
+    networks: [gwf]
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: gwf-frontend
+    environment:
+      VITE_BACKEND_URL: http://172.18.1.60:3040
+      VITE_TITILER_URL: http://172.18.1.60:3042
+      VITE_MAPBOX_TOKEN: ${VITE_MAPBOX_TOKEN:-}
+      # Poll for file changes so HMR works with bind mounts on Windows/macOS.
+      VITE_USE_POLLING: "true"
+    ports:
+      - "5180:5180"
+    # Live source for HMR: edits on the host hot-reload without a rebuild. The
+    # anonymous node_modules volume keeps the image's installed deps (the host has
+    # none / a different platform build), and shared/js lives outside frontend/.
+    volumes:
+      - ./frontend:/app
+      - ./shared/js:/app/shared/js:ro
+      - /app/node_modules
+    depends_on: [backend]
+    networks: [gwf]
+
+volumes:
+  gwf_pgdata:
+
+networks:
+  gwf:
+    name: gwf-net

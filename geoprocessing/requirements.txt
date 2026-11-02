@@ -1,0 +1,10 @@
+fastapi==0.115.*
+uvicorn[standard]==0.30.*
+rasterio==1.3.*
+rio-cogeo==5.*
+psycopg[binary]==3.2.*
+psycopg-pool==3.2.*
+apscheduler==3.10.*
+# Keep the base image's numpy 1.26 (Debian managed, pip cannot upgrade it).
+numpy<2
+scikit-learn==1.5.*
